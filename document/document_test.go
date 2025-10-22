@@ -10,15 +10,15 @@ import (
 func TestDocument_UseCase(t *testing.T) {
 	amount := 100
 
-	doc := document.Document{
-		Amount:    amount,
-		DueAmount: amount,
-		Status:    "pending",
-	}
+	doc, err := document.InitDocument(amount)
 
-	assert.Equal(t, "pending", doc.Status)
+	assert.NoError(t, err)
+
+	doc.Status.IsPaid()
+
+	assert.Equal(t, "pending", doc.Status.Value())
 	assert.Equal(t, 100, doc.Amount)
-	assert.Equal(t, 100, doc.DueAmount)
+	assert.Equal(t, 100, doc.DueAmount.Value())
 
 }
 
@@ -30,20 +30,26 @@ type Request struct {
 
 func TestDocument_Handler(t *testing.T) {
 	req := Request{
-		Amount:    200,
+		Amount:    100,
 		DueAmount: 100,
 		Status:    "pending",
 	}
 
-	doc := document.Document{
-		Amount:    req.Amount,
-		DueAmount: req.DueAmount,
-		Status:    "pending",
-	}
+	dueAmount, err := document.NewDueAmount(req.DueAmount, req.Amount)
 
-	assert.Equal(t, "pending", doc.Status)
-	assert.Equal(t, 200, doc.Amount)
-	assert.Equal(t, 100, doc.DueAmount)
+	assert.NoError(t, err)
+
+	status, err := document.NewStatus(req.Status)
+
+	assert.NoError(t, err)
+
+	doc, err := document.New(req.Amount, *dueAmount, *status)
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, "pending", doc.Status.Value())
+	assert.Equal(t, 100, doc.Amount)
+	assert.Equal(t, 100, doc.DueAmount.Value())
 }
 
 type Row struct {
@@ -60,15 +66,11 @@ func TestDocument_FromDB(t *testing.T) {
 		Status:    "paid",
 	}
 
-	doc := document.Document{
-		Amount:    row.Amount,
-		DueAmount: row.DueAmount,
-		Status:    row.Status,
-	}
+	doc := document.Rehydrate(row.Amount, row.DueAmount, row.Status)
 
-	assert.Equal(t, "paid", doc.Status)
+	assert.Equal(t, "paid", doc.Status.Value())
 	assert.Equal(t, 300, doc.Amount)
-	assert.Equal(t, 150, doc.DueAmount)
+	assert.Equal(t, 150, doc.DueAmount.Value())
 }
 
 type ApiResponse struct {
@@ -85,13 +87,11 @@ func TestDocument_FromApi(t *testing.T) {
 		Status:    "overdue",
 	}
 
-	doc := document.Document{
-		Amount:    apiResp.Amount,
-		DueAmount: apiResp.DueAmount,
-		Status:    apiResp.Status,
-	}
+	doc, err := document.NewFromPrimitives(apiResp.Amount, apiResp.DueAmount, apiResp.Status)
 
-	assert.Equal(t, "overdue", doc.Status)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "overdue", doc.Status.Value())
 	assert.Equal(t, 400, doc.Amount)
-	assert.Equal(t, 200, doc.DueAmount)
+	assert.Equal(t, 200, doc.DueAmount.Value())
 }
