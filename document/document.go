@@ -137,10 +137,6 @@ func New(amount int, dueAmount DueAmount, status Status) (*Document, error) {
 		return nil, errors.New("amount cannot be negative")
 	}
 
-	if status != StatusPending && status != StatusPaid && status != StatusOverdue {
-		return nil, errors.New("invalid status")
-	}
-
 	return &Document{
 		Amount:    amount,
 		DueAmount: dueAmount,
