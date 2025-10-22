@@ -41,10 +41,17 @@ func RehydrateDueAmount(value int) DueAmount {
 	return DueAmount{value: value}
 }
 
+const (
+	statusPendingValue = "pending"
+	statusPaidValue    = "paid"
+	statusOverdueValue = "overdue"
+)
+
 var (
-	StatusPending = Status{value: "pending"}
-	StatusPaid    = Status{value: "paid"}
-	StatusOverdue = Status{value: "overdue"}
+	validStatusValues = []string{statusPendingValue, statusPaidValue, statusOverdueValue}
+	StatusPending     = Status{value: statusPendingValue}
+	StatusPaid        = Status{value: statusPaidValue}
+	StatusOverdue     = Status{value: statusOverdueValue}
 )
 
 type Status struct {
@@ -56,7 +63,8 @@ func RehydrateStatus(value string) Status {
 }
 
 func NewStatus(value string) (*Status, error) {
-	if value != StatusPending.Value() && value != StatusPaid.value && value != StatusOverdue.value {
+
+	if !slices.Contains(validStatusValues, value) {
 		return nil, errors.New("invalid status value")
 	}
 
