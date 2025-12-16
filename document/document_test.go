@@ -10,7 +10,7 @@ import (
 func TestDocument_UseCase(t *testing.T) {
 	amount := 100
 
-	doc, err := document.InitDocument(amount)
+	doc, err := document.Create(amount)
 
 	assert.NoError(t, err)
 
@@ -24,26 +24,18 @@ func TestDocument_UseCase(t *testing.T) {
 
 type Request struct {
 	Amount    int
-	DueAmount int
 	Status    string
+	DueAmount int
 }
 
 func TestDocument_Handler(t *testing.T) {
 	req := Request{
 		Amount:    100,
-		DueAmount: 100,
 		Status:    "pending",
+		DueAmount: 100,
 	}
 
-	dueAmount, err := document.NewDueAmount(req.DueAmount, req.Amount)
-
-	assert.NoError(t, err)
-
-	status, err := document.NewStatus(req.Status)
-
-	assert.NoError(t, err)
-
-	doc, err := document.New(req.Amount, *dueAmount, *status)
+	doc, err := document.FromPrimitives(req.Amount, req.DueAmount, req.Status)
 
 	assert.NoError(t, err)
 
@@ -87,7 +79,7 @@ func TestDocument_FromApi(t *testing.T) {
 		Status:    "overdue",
 	}
 
-	doc, err := document.NewFromPrimitives(apiResp.Amount, apiResp.DueAmount, apiResp.Status)
+	doc, err := document.FromPrimitives(apiResp.Amount, apiResp.DueAmount, apiResp.Status)
 
 	assert.NoError(t, err)
 
